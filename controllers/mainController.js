@@ -1,6 +1,7 @@
+const path = require('path');
 
 const mainGet = (req, res) => {
-    res.render('main', { title: 'Strona główna' });
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
 }
 
 module.exports = {
