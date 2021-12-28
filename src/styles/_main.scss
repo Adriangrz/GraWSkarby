@@ -1,0 +1,23 @@
+.game-board {
+    @include media-breakpoint-up(md) {
+        @include row-cols(10);
+    }
+    &__button{
+        min-width: 55px;
+        margin: 2px;
+    }
+    &__cell{
+        display: flex;
+        justify-content: center;
+    }
+}
+.page-main{
+    display: flex;
+    flex-grow: 1;
+    margin: 2px 0px 2px 0px;
+    &__container{
+        display: flex;
+        flex-grow: 1;
+        align-items: center;
+    }
+}
