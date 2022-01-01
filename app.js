@@ -6,8 +6,8 @@ const mainRoutes = require('./routes/mainRoutes');
 
 const app = express();
 const server = app.listen(8081);
-//to delete second parameter 
-const io = socketIO(server,{cors: {origin: '*',}});
+//to delete second parameter
+const io = socketIO(server, { cors: { origin: '*' } });
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -22,8 +22,8 @@ app.get('/', (req, res) => {
 });
 app.use('/nowy', mainRoutes.router);
 
-const onConnection = (socket) =>{
-    mainRoutes.mainRoutesSocket(io,socket);
-}
+const onConnection = (socket) => {
+    mainRoutes.mainRoutesSocket(io, socket);
+};
 
-io.on("connection", onConnection);
+io.on('connection', onConnection);
