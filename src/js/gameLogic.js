@@ -2,15 +2,16 @@ import { informAboutJoinedPlayer, informAboutGameStart, getValueOfCell } from '.
 import { displayError } from './errorHandler';
 
 const joinBtn = document.querySelector('.joining-form__button-join');
-joinBtn.addEventListener("click", showAllPlayersInRoom);
+joinBtn.addEventListener("click", () => {
+    name = document.querySelector('.joining-form__input-user-name').value;
+    informAboutJoinedPlayer(name);
+});
 let name = "";
 let listOfPlayers = [];
 
-function showAllPlayersInRoom(){
-    name = document.querySelector('.joining-form__input-user-name').value;
+export function showAllPlayersInRoom(playersListFromServer){
     const joiningForm = document.querySelector('.joining-form');
     joiningForm.remove();
-    informAboutJoinedPlayer(name);
     const pageMainContainer = document.querySelector('.game-lobby');
     pageMainContainer.className += " w-100";
     const playButton = document.createElement('button');
@@ -21,9 +22,11 @@ function showAllPlayersInRoom(){
         informAboutGameStart();
     };
     pageMainContainer.appendChild(playButton);
+    if (playersListFromServer.length === 0) return;
+    showListOfPlayersInHtml(playersListFromServer);
 }
 
-export function showListOfPlayersInHtml(playersListToShow){
+function showListOfPlayersInHtml(playersListToShow){
     const playersList = document.querySelector('.players-list');
     playersListToShow.forEach(playerName => {
         addPlayerToListInHtml(playerName,playersList);
@@ -58,6 +61,10 @@ export function startGame(){
 
 function renderGameBoard() {
     const gameBoard = document.querySelector('.game-board');
+    const turnInformation = document.createElement('h3');
+    turnInformation.className = 'game-board__turn-info';
+    turnInformation.textContent = 'Czekaj na twoją kolej';
+    gameBoard.appendChild(turnInformation)
     for (let i = 0; i < 100; i++) {
         const cell = document.createElement('div');
         const cellButton = document.createElement('button');
@@ -76,10 +83,17 @@ function renderGameBoard() {
 }
 
 function cellButtonClick(numberOfButton) {
+    const turnInformation = document.querySelector('.game-board__turn-info');
+    turnInformation.textContent = 'Czekaj na twoją kolej';
     getValueOfCell(numberOfButton);
 }
 
 export function showValueOfCell(value, numberOfButton) {
     const cell = document.querySelector(`#game-board__cell-${numberOfButton + 1}`);
     cell.textContent = `${value}`;
+}
+
+export function changeTurnInfo(){
+    const turnInformation = document.querySelector('.game-board__turn-info');
+    turnInformation.textContent = 'Twoja kolej';
 }

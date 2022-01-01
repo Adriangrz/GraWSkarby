@@ -1,10 +1,11 @@
 import * as io from 'socket.io-client';
 import {
     addPlayerToList,
-    showListOfPlayersInHtml,
     startGame,
     deletePlayerFromList,
     showValueOfCell,
+    showAllPlayersInRoom,
+    changeTurnInfo,
 } from './gameLogic';
 const socket = io.connect('http://localhost:8081');
 
@@ -16,14 +17,15 @@ socket.on('playerLeftGame', (playersList) => onPlayerLeftGame(playersList));
 socket.on('cellValue', (valueOfCell, numberOfButton) =>
     showValueOfCell(valueOfCell, numberOfButton)
 );
+socket.on('cellWasDiscovered', (numberOfButton) => showValueOfCell('', numberOfButton));
+socket.on('yourTurn', () => changeTurnInfo());
 
 export function informAboutCell(numberOfCell) {
     socket.emit('selectedCell', numberOfCell);
 }
 
 function onPlayersList(playersListFromServer) {
-    if (playersListFromServer.length == 0) return;
-    showListOfPlayersInHtml(playersListFromServer);
+    showAllPlayersInRoom(playersListFromServer);
 }
 
 function onPlayerJoined(playerName) {
