@@ -8,12 +8,13 @@ joinBtn.addEventListener("click", () => {
 });
 let name = "";
 let listOfPlayers = [];
+let isGameStart = false;
 
 export function showAllPlayersInRoom(playersListFromServer){
     const joiningForm = document.querySelector('.joining-form');
     joiningForm.remove();
-    const pageMainContainer = document.querySelector('.game-lobby');
-    pageMainContainer.className += " w-100";
+    const gameLobby = document.querySelector('.game-lobby');
+    gameLobby.className += " w-100";
     const playButton = document.createElement('button');
     playButton.type = 'button';
     playButton.className = 'game-lobby__button btn btn-secondary';
@@ -21,12 +22,13 @@ export function showAllPlayersInRoom(playersListFromServer){
     playButton.onclick = () => {
         informAboutGameStart();
     };
-    pageMainContainer.appendChild(playButton);
+    gameLobby.appendChild(playButton);
     if (playersListFromServer.length === 0) return;
     showListOfPlayersInHtml(playersListFromServer);
 }
 
 function showListOfPlayersInHtml(playersListToShow){
+    if(isGameStart) return;
     const playersList = document.querySelector('.players-list');
     playersListToShow.forEach(playerName => {
         addPlayerToListInHtml(playerName,playersList);
@@ -34,6 +36,7 @@ function showListOfPlayersInHtml(playersListToShow){
 }
 
 function addPlayerToListInHtml(playerName,playerList){
+    if(isGameStart) return;
     const listItem = document.createElement('li');
     listItem.className = 'players-list__item list-group-item text-center';
     listItem.textContent = `${playerName}`;
@@ -48,23 +51,45 @@ export function addPlayerToList(playerName){
 
 export function deletePlayerFromList(playersListFromServer){
     listOfPlayers = playersListFromServer;
-    const playersList = document.querySelector('.players-list');
-    playersList.innerHTML = '';
+    if(!isGameStart){
+        const playersList = document.querySelector('.players-list');
+        playersList.innerHTML = '';
+    }
     showListOfPlayersInHtml(listOfPlayers);
 }
 
 export function startGame(){
-    const pageMainContainer = document.querySelector('.game-lobby');
-    pageMainContainer.remove();
+    const gameLobby = document.querySelector('.game-lobby');
+    gameLobby.remove();
     renderGameBoard();
+    isGameStart = true;
+}
+
+export function endOfGame(winnerOrWinners){
+    const gameBoard = document.querySelector('.game-board');
+    gameBoard.remove();
+    const pageMainContainer = document.querySelector('.page-main__container');
+    const winInformation = document.createElement('h3');
+    winInformation.className = 'winner-information';
+    if(winnerOrWinners.length > 1){
+        let winnerText = 'Wygrali';
+        for (let winner of winnerOrWinners) {
+            winnerText += ` ${winner},`;
+        }
+        winInformation.textContent = winnerText;
+        pageMainContainer.appendChild(winInformation);
+        return;
+    }
+    winInformation.textContent = `Wygrał ${winnerOrWinners[0]}`;
+    pageMainContainer.appendChild(winInformation);
 }
 
 function renderGameBoard() {
     const gameBoard = document.querySelector('.game-board');
     const turnInformation = document.createElement('h3');
     turnInformation.className = 'game-board__turn-info';
-    turnInformation.textContent = 'Czekaj na twoją kolej';
-    gameBoard.appendChild(turnInformation)
+    turnInformation.textContent = 'Czekaj na swoją kolej';
+    gameBoard.appendChild(turnInformation);
     for (let i = 0; i < 100; i++) {
         const cell = document.createElement('div');
         const cellButton = document.createElement('button');
@@ -84,7 +109,7 @@ function renderGameBoard() {
 
 function cellButtonClick(numberOfButton) {
     const turnInformation = document.querySelector('.game-board__turn-info');
-    turnInformation.textContent = 'Czekaj na twoją kolej';
+    turnInformation.textContent = 'Czekaj na swoją kolej';
     getValueOfCell(numberOfButton);
 }
 
@@ -93,7 +118,7 @@ export function showValueOfCell(value, numberOfButton) {
     cell.textContent = `${value}`;
 }
 
-export function changeTurnInfo(){
+export function changeTurnInfo(text){
     const turnInformation = document.querySelector('.game-board__turn-info');
-    turnInformation.textContent = 'Twoja kolej';
+    turnInformation.textContent = `${text}`;
 }

@@ -6,6 +6,7 @@ import {
     showValueOfCell,
     showAllPlayersInRoom,
     changeTurnInfo,
+    endOfGame,
 } from './gameLogic';
 const socket = io.connect('http://localhost:8081');
 
@@ -18,7 +19,9 @@ socket.on('cellValue', (valueOfCell, numberOfButton) =>
     showValueOfCell(valueOfCell, numberOfButton)
 );
 socket.on('cellWasDiscovered', (numberOfButton) => showValueOfCell('', numberOfButton));
-socket.on('yourTurn', () => changeTurnInfo());
+socket.on('yourTurn', () => changeTurnInfo('Twoja tura'));
+socket.on('defeatByMonster', () => changeTurnInfo('Zostałeś pokonany przez potwora'));
+socket.on('endOfGame', (winnerOrWinners) => endOfGame(winnerOrWinners));
 
 export function informAboutCell(numberOfCell) {
     socket.emit('selectedCell', numberOfCell);
