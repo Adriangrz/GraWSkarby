@@ -1,8 +1,7 @@
 const path = require('path');
-const { gameBoard, points } = require('../models/gameBoard');
-let { nameOfPlayerIndexInThisTurn } = require('../models/gameBoard');
-const { playersList, playersDetailsList } = require('../models/playersList');
-let isGameStart = require('../models/game');
+let { isGameStart, playerInThisTurn } = require('../models/game');
+const Player = require('../models/player');
+const GameBoard = require('../models/gameBoard');
 
 let countToEnd;
 
@@ -10,117 +9,112 @@ const mainGet = (req, res) => {
     res.sendFile(path.join(__dirname, '../dist/index.html'));
 };
 
-const playerJoinedSocket = (io, socket, playerName) => {
-    if (playersList.includes(playerName)) return;
-    if (playersList) socket.emit('listOfPlayers', playersList);
-    playersList.push(playerName);
-    playersDetailsList.set(socket.id, playerName);
-    points.set(playerName,0);
+const playerJoinedSocket = async (io, socket, playerName) => {
+    if (await Player.findOne({ name: playerName })) return;
+    const players = await Player.find({}, '-_id name');
+    if (players) socket.emit('listOfPlayers', players);
+    const player = new Player({
+        socketId: socket.id,
+        name: playerName,
+        points: 0,
+    });
+    await player.save();
     socket.join('game');
     io.to('game').emit('newPlayerJoined', playerName);
 };
 
-const gameStart = (io, socket) => {
+const gameStart = async (io, socket) => {
     isGameStart = true;
     createGameBoard();
     io.to('game').emit('gameStart');
-    nameOfPlayerIndexInThisTurn = playersList.indexOf(playersDetailsList.get(socket.id));
+    playerInThisTurn = await Player.findOne({ socketId: socket.id }, 'name');
     socket.emit('yourTurn');
     countToEnd = setTimeout(() => {
-        endOfGame(io,socket);
+        endOfGame(io, socket);
     }, 240000);
 };
 
-const disconnectFromGame = (io, socket) => {
-    let playerName = playersDetailsList.get(socket.id);
+const disconnectFromGame = async (io, socket) => {
+    let playerName = await Player.findOne({ socketId: socket.id }, 'name');
     if (!playerName) {
         return;
     }
-    const index = playersList.indexOf(playerName);
-    if (index > -1) {
-        playersList.splice(index, 1);
-    }
-    playersDetailsList.delete(socket.id);
-    io.to('game').emit('playerLeftGame', playersList);
+    Player.deleteOne({ socketId: socket.id });
+    io.to('game').emit('playerLeftGame', await Player.find({}, 'name'));
 };
 
-function endOfGame(io,socket){
-    if(!isGameStart)
-        return;
+async function endOfGame(io, socket) {
+    if (!isGameStart) return;
     clearTimeout(countToEnd);
     isGameStart = false;
     let max = 0;
     let winners = [];
-    points.forEach((value, key) => {
-        if(value === max)
-        {
-            winners.push(key);
+    let players = await Player.find().sort({ points: -1 }).limit(2);
+    players.forEach((element) => {
+        if (element.points === max) {
+            winners.push(element.name);
         }
-        if(value > max)
-        {
+        if (element.points > max) {
             winners = [];
-            winners.push(key);
-            max = value;
+            winners.push(element.name);
+            max = element.points;
         }
-        
     });
     io.to('game').emit('endOfGame', winners);
+    await Player.deleteMany({});
+    await GameBoard.deleteMany({});
 }
 
-function createGameBoard() {
+async function createGameBoard() {
     let availableFields = [];
+    let board = [];
     for (let i = 0; i < 100; i++) {
         availableFields.push(i);
-        gameBoard.push('');
+        board.push('');
     }
 
     for (let i = 0; i < 100; i++) {
         let index = Math.floor(Math.random() * availableFields.length);
         if (i < 40) {
-            gameBoard[availableFields[index]] = Math.floor(Math.random() * 10) + 1;
+            board[availableFields[index]] = Math.floor(Math.random() * 10) + 1;
         }
         if (i >= 40 && i < 50) {
-            gameBoard[availableFields[index]] = 'P';
+            board[availableFields[index]] = 'P';
         }
         if (index > -1) {
             availableFields.splice(index, 1);
         }
     }
+    for (let i = 0; i < 100; i++) {
+        const gameBoard = new GameBoard({ number: i, value: board[i].toString() });
+        await gameBoard.save();
+    }
 }
 
-const getValueOfCell = (io, socket, numberOfButton) => {
-    if (
-        !socket.rooms.has('game') ||
-        !isGameStart ||
-        playersDetailsList.get(socket.id) !== playersList[nameOfPlayerIndexInThisTurn]
-    )
-        return;
+const getValueOfCell = async (io, socket, numberOfButton) => {
+    let player = await Player.findOne({ socketId: socket.id });
+    if (!socket.rooms.has('game') || !isGameStart || player.name !== playerInThisTurn.name) return;
     socket.broadcast.to('game').emit('cellWasDiscovered', numberOfButton);
-    socket.emit('cellValue', gameBoard[numberOfButton], numberOfButton);
-    let valueOfCell = gameBoard[numberOfButton];
-    if(valueOfCell === '')
-        valueOfCell = 0;
-    if(valueOfCell === 'P'){
-        if (nameOfPlayerIndexInThisTurn > -1) {
-            playersList.splice(nameOfPlayerIndexInThisTurn, 1);
-        }
+    let cell = await GameBoard.findOne({ number: numberOfButton });
+    socket.emit('cellValue', cell.value, numberOfButton);
+    if (cell.value === '') cell.value = 0;
+    if (cell.value === 'P') {
+        await Player.deleteOne({ name: playerInThisTurn.name });
         socket.emit('defeatByMonster');
-    }else{
-        let currentPoints = points.get(playersList[nameOfPlayerIndexInThisTurn]);
-        points.set(playersList[nameOfPlayerIndexInThisTurn],currentPoints+valueOfCell);
+    } else {
+        let currentPoints = player.points;
+        player.points = currentPoints + parseInt(cell.value);
+        await player.save();
     }
-    if(playersList.length <= 1 ){
-        endOfGame(io,socket);
+    let numberOfPlayers = await Player.count({});
+    if (numberOfPlayers <= 1) {
+        endOfGame(io, socket);
         return;
     }
-    if (nameOfPlayerIndexInThisTurn < (playersList.length-1) && gameBoard[numberOfButton] !== 'P') nameOfPlayerIndexInThisTurn++;
-    else if(gameBoard[numberOfButton] !== 'P') nameOfPlayerIndexInThisTurn = 0;
-    playersDetailsList.forEach(function (value, key) {
-        if (playersList[nameOfPlayerIndexInThisTurn] === value) {
-            socket.broadcast.to(key).emit('yourTurn');
-            return;
-        }
-    });
+    let nextPlayer = await Player.findOne({ _id: { $gt: player._id } }).sort({ _id: 1 });
+    if (!nextPlayer) nextPlayer = await Player.findOne({}).sort({ _id: 1 });
+    playerInThisTurn = nextPlayer;
+    socket.broadcast.to(nextPlayer.socketId).emit('yourTurn');
 };
 
 module.exports = {

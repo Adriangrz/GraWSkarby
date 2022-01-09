@@ -1,11 +1,27 @@
 const express = require('express');
 const path = require('path');
 const socketIO = require('socket.io');
+const mongoose = require('mongoose');
 
 const mainRoutes = require('./routes/mainRoutes');
+const dbURL = 'mongodb://localhost:27017/TreasureGame';
+const Player = require('./models/player');
+const GameBoard = require('./models/gameBoard');
 
 const app = express();
+
 const server = app.listen(8081);
+
+mongoose
+    .connect(dbURL)
+    .then(async (result) => { 
+        console.log("connected to database");
+        await Player.deleteMany({});
+        await GameBoard.deleteMany({});
+    })
+    .catch((err) => console.log(err));
+
+
 //to delete second parameter
 const io = socketIO(server, { cors: { origin: '*' } });
 

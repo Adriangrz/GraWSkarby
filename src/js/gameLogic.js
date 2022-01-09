@@ -30,8 +30,8 @@ export function showAllPlayersInRoom(playersListFromServer){
 function showListOfPlayersInHtml(playersListToShow){
     if(isGameStart) return;
     const playersList = document.querySelector('.players-list');
-    playersListToShow.forEach(playerName => {
-        addPlayerToListInHtml(playerName,playersList);
+    playersListToShow.forEach(element => {
+        addPlayerToListInHtml(element.name,playersList);
     });
 }
 

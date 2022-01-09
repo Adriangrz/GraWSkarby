@@ -1,2 +1,6 @@
 let isGameStart = false;
-module.exports = isGameStart;
+let playerInThisTurn = null;
+module.exports = {
+    isGameStart,
+    playerInThisTurn,
+};
