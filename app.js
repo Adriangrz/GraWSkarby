@@ -14,7 +14,7 @@ const server = app.listen(8081);
 
 mongoose
     .connect(dbURL)
-    .then(async (result) => { 
+    .then(async () => { 
         console.log("connected to database");
         await Player.deleteMany({});
         await GameBoard.deleteMany({});

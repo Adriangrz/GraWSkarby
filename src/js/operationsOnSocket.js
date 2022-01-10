@@ -23,10 +23,6 @@ socket.on('yourTurn', () => changeTurnInfo('Twoja tura'));
 socket.on('defeatByMonster', () => changeTurnInfo('Zostałeś pokonany przez potwora'));
 socket.on('endOfGame', (winnerOrWinners) => endOfGame(winnerOrWinners));
 
-export function informAboutCell(numberOfCell) {
-    socket.emit('selectedCell', numberOfCell);
-}
-
 function onPlayersList(playersListFromServer) {
     showAllPlayersInRoom(playersListFromServer);
 }
@@ -39,14 +35,19 @@ function onPlayerLeftGame(playersList) {
     deletePlayerFromList(playersList);
 }
 
-export function getValueOfCell(numberOfButton) {
-    socket.emit('getValueOfCell', numberOfButton);
+
+export function informAboutJoinedPlayer(playerName) {
+    socket.emit('playerJoined', playerName);
 }
 
 export function informAboutGameStart() {
     socket.emit('gameStart');
 }
 
-export function informAboutJoinedPlayer(playerName) {
-    socket.emit('playerJoined', playerName);
+export function getValueOfCell(numberOfButton) {
+    socket.emit('getValueOfCell', numberOfButton);
+}
+
+export function informAboutCell(numberOfCell) {
+    socket.emit('selectedCell', numberOfCell);
 }

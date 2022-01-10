@@ -27,22 +27,6 @@ export function showAllPlayersInRoom(playersListFromServer){
     showListOfPlayersInHtml(playersListFromServer);
 }
 
-function showListOfPlayersInHtml(playersListToShow){
-    if(isGameStart) return;
-    const playersList = document.querySelector('.players-list');
-    playersListToShow.forEach(element => {
-        addPlayerToListInHtml(element.name,playersList);
-    });
-}
-
-function addPlayerToListInHtml(playerName,playerList){
-    if(isGameStart) return;
-    const listItem = document.createElement('li');
-    listItem.className = 'players-list__item list-group-item text-center';
-    listItem.textContent = `${playerName}`;
-    playerList.appendChild(listItem);
-}
-
 export function addPlayerToList(playerName){
     const playersList = document.querySelector('.players-list');
     listOfPlayers.push(playerName);
@@ -65,6 +49,16 @@ export function startGame(){
     isGameStart = true;
 }
 
+export function showValueOfCell(value, numberOfButton) {
+    const cell = document.querySelector(`#game-board__cell-${numberOfButton + 1}`);
+    cell.textContent = `${value}`;
+}
+
+export function changeTurnInfo(text){
+    const turnInformation = document.querySelector('.game-board__turn-info');
+    turnInformation.textContent = `${text}`;
+}
+
 export function endOfGame(winnerOrWinners){
     const gameBoard = document.querySelector('.game-board');
     gameBoard.remove();
@@ -82,6 +76,24 @@ export function endOfGame(winnerOrWinners){
     }
     winInformation.textContent = `Wygrał ${winnerOrWinners[0]}`;
     pageMainContainer.appendChild(winInformation);
+}
+
+
+
+function showListOfPlayersInHtml(playersListToShow){
+    if(isGameStart) return;
+    const playersList = document.querySelector('.players-list');
+    playersListToShow.forEach(element => {
+        addPlayerToListInHtml(element.name,playersList);
+    });
+}
+
+function addPlayerToListInHtml(playerName,playerList){
+    if(isGameStart) return;
+    const listItem = document.createElement('li');
+    listItem.className = 'players-list__item list-group-item text-center';
+    listItem.textContent = `${playerName}`;
+    playerList.appendChild(listItem);
 }
 
 function renderGameBoard() {
@@ -111,14 +123,4 @@ function cellButtonClick(numberOfButton) {
     const turnInformation = document.querySelector('.game-board__turn-info');
     turnInformation.textContent = 'Czekaj na swoją kolej';
     getValueOfCell(numberOfButton);
-}
-
-export function showValueOfCell(value, numberOfButton) {
-    const cell = document.querySelector(`#game-board__cell-${numberOfButton + 1}`);
-    cell.textContent = `${value}`;
-}
-
-export function changeTurnInfo(text){
-    const turnInformation = document.querySelector('.game-board__turn-info');
-    turnInformation.textContent = `${text}`;
 }

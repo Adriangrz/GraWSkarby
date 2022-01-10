@@ -10,5 +10,12 @@ const gameBoardSchema = new Schema({
     }
 });
 
+gameBoardSchema.statics.saveGameBoard = async (sizeOfBoard,board) =>{
+    for (let i = 0; i < sizeOfBoard; i++) {
+        const gameBoard = new GameBoard({ number: i, value: board[i].toString() });
+        await gameBoard.save();
+    }
+}
+
 const GameBoard = mongoose.model('GameBoard', gameBoardSchema);
 module.exports = GameBoard;
